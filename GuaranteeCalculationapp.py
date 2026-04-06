@@ -115,10 +115,23 @@ def build_pdf(lines_data, ref, user, currency, rate, rate_source,
     story = []
 
     # ── Header: logo left, title right ───────────────────────────────────────
-    try:
-        logo = RLImage(logo_path, width=45*mm, height=12*mm)
-    except Exception:
-        logo = Paragraph("DKM", title_style)
+    _script_dir = os.path.dirname(os.path.abspath(__file__))
+    _logo_candidates = [
+        logo_path,
+        os.path.join(_script_dir, "DKM-Logo-kleur-1024x276.png"),
+        "DKM-Logo-kleur-1024x276.png",
+    ]
+    logo = None
+    for _candidate in _logo_candidates:
+        if _candidate and os.path.exists(str(_candidate)):
+            try:
+                logo = RLImage(_candidate, width=45*mm, height=12*mm)
+                break
+            except Exception:
+                continue
+    if logo is None:
+        logo = Paragraph("<b>DKM</b>", ParagraphStyle(
+            "lf", fontSize=14, textColor=DKM_RED, fontName="Helvetica-Bold"))
 
     header_data = [[
         logo,

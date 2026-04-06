@@ -359,8 +359,8 @@ def main():
     st.divider()
 
     # ── Column headers ────────────────────────────────────────────────────────
-    col_widths = [4.8, 1.5, 1.3, 1.3, 1.3, 1.3, 0.4]
-    headers = [f"GN-code + Omschrijving  (typ code om te zoeken)",
+    col_widths = [1.5, 1.8, 1.5, 1.3, 1.3, 1.3, 1.3, 0.4]
+    headers = ["GN-code (8 cijfers)", "Omschrijving",
                f"Factuurwaarde ({chosen_currency})",
                "Waarde EUR", "Duty %", "Duty", "BTW (21%)", ""]
     h_cols = st.columns(col_widths)
@@ -373,68 +373,48 @@ def main():
     for i, line in enumerate(st.session_state.lines):
         c = st.columns(col_widths)
 
-        # GN-code: text input triggers rerun → filtered selectbox always in sync
+        # GN-code: user types 8-digit code → lookup → show description or error
         with c[0]:
-            # Read typed prefix directly from session state (always current)
-            search_key = f"search_{i}"
-            prefix = st.session_state.get(search_key, line.get("typed_code", "")).strip()
+            typed_code = st.text_input(
+                f"gncode_{i}",
+                value=line.get("typed_code", ""),
+                placeholder="bv. 39269097",
+                key=f"gncode_{i}",
+                label_visibility="collapsed",
+                max_chars=8,
+            )
+            line["typed_code"] = typed_code.strip()
 
-            search_col, sel_col = st.columns([1, 2])
+            code = line["typed_code"]
+            row_m = commodities_df[commodities_df["commodity_code"] == code] if code else pd.DataFrame()
 
-            with search_col:
-                st.text_input(
-                    f"search_{i}",
-                    value=prefix,
-                    placeholder="🔍 typ GN-code...",
-                    key=search_key,
-                    label_visibility="collapsed",
-                    max_chars=8,
-                )
-                # Always use the live session state value for filtering
-                prefix = st.session_state.get(search_key, "").strip()
-                # If prefix changed, reset saved selection
-                if prefix != line.get("typed_code", ""):
-                    line["typed_code"] = prefix
-                    line["commodity_label"] = ""
+            if code == "":
+                duty_pct = 0.0
+                commodity_label = ""
+            elif len(code) < 8:
+                st.caption(f"⏳ {len(code)}/8 cijfers")
+                duty_pct = 0.0
+                commodity_label = ""
+            elif row_m.empty:
+                st.caption("❌ Code niet gevonden")
+                duty_pct = 0.0
+                commodity_label = ""
+            else:
+                row_f = row_m.iloc[0]
+                duty_pct = row_f["duty_pct"]
+                commodity_label = f"{code} – {row_f['description']}"
+                st.caption(f"✅ {row_f['description']}")
 
-            with sel_col:
-                if prefix:
-                    filtered_df = commodities_df[
-                        commodities_df["commodity_code"].str.startswith(prefix)
-                    ].head(200)
-                else:
-                    filtered_df = commodities_df.head(200)
-
-                opts = [""] + [
-                    f"{r['commodity_code']} – {r['description']}"
-                    for _, r in filtered_df.iterrows()
-                ]
-                saved_label = line.get("commodity_label", "")
-                sel_idx = opts.index(saved_label) if saved_label in opts else 0
-
-                sel = st.selectbox(
-                    f"comm_{i}",
-                    options=opts,
-                    index=sel_idx,
-                    format_func=lambda x: "— selecteer —" if x == "" else x,
-                    key=f"comm_{i}",
-                    label_visibility="collapsed",
-                )
-
-                if sel == "":
-                    duty_pct = 0.0
-                    commodity_label = ""
-                    line["commodity_label"] = ""
-                else:
-                    line["commodity_label"] = sel
-                    sel_code = sel.split(" – ")[0].strip()
-                    line["typed_code"] = sel_code
-                    row_m = commodities_df[commodities_df["commodity_code"] == sel_code]
-                    duty_pct = row_m.iloc[0]["duty_pct"] if not row_m.empty else 0.0
-                    commodity_label = sel
+        # Omschrijving kolom
+        with c[1]:
+            if commodity_label:
+                desc_text = commodity_label.split(" – ", 1)[1] if " – " in commodity_label else commodity_label
+                st.markdown(f"<div class='calc-cell desc-cell'>{desc_text}</div>", unsafe_allow_html=True)
+            else:
+                st.markdown("<div class='calc-cell desc-cell' style='color:#999;'>–</div>", unsafe_allow_html=True)
 
         # Invoice value — auto-add new line on Enter (value change) if last line
-        with c[1]:
+        with c[2]:
             prev_val = float(line.get("invoice_value", 0.0))
             inv_val = st.number_input(
                 f"inv_{i}", min_value=0.0, value=prev_val,
@@ -455,15 +435,15 @@ def main():
         vat_calc = (value_eur + duty_calc) * 0.21
         total_taxes = duty_calc + vat_calc
 
-        with c[2]:
-            st.markdown(f"<div class='calc-cell'>€ {value_eur:,.2f}</div>", unsafe_allow_html=True)
         with c[3]:
-            st.markdown(f"<div class='calc-cell'>{duty_pct:.2f}%</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='calc-cell'>€ {value_eur:,.2f}</div>", unsafe_allow_html=True)
         with c[4]:
-            st.markdown(f"<div class='calc-cell'>€ {duty_calc:,.2f}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='calc-cell'>{duty_pct:.2f}%</div>", unsafe_allow_html=True)
         with c[5]:
-            st.markdown(f"<div class='calc-cell'>€ {vat_calc:,.2f}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='calc-cell'>€ {duty_calc:,.2f}</div>", unsafe_allow_html=True)
         with c[6]:
+            st.markdown(f"<div class='calc-cell'>€ {vat_calc:,.2f}</div>", unsafe_allow_html=True)
+        with c[7]:
             if st.button("🗑", key=f"del_{i}", help="Verwijder lijn",
                          disabled=len(st.session_state.lines) == 1):
                 st.session_state.lines.pop(i)

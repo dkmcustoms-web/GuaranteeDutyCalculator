@@ -382,15 +382,21 @@ def main():
                 duty_pct = row_match.iloc[0]["duty_pct"] if not row_match.empty else 0.0
                 commodity_label = sel
 
-        # Invoice value
+        # Invoice value — auto-add new line on Enter (value change) if last line
         with c[1]:
+            prev_val = float(line.get("invoice_value", 0.0))
             inv_val = st.number_input(
-                f"inv_{i}", min_value=0.0, value=float(line.get("invoice_value", 0.0)),
+                f"inv_{i}", min_value=0.0, value=prev_val,
                 step=100.0, format="%.2f",
                 key=f"inv_{i}",
                 label_visibility="collapsed",
             )
             line["invoice_value"] = inv_val
+            # If value changed to > 0 and this is the last line → add new line
+            is_last_line = (i == len(st.session_state.lines) - 1)
+            if inv_val > 0 and inv_val != prev_val and is_last_line:
+                st.session_state.lines.append(new_line())
+                st.rerun()
 
         # Calculations
         value_eur = inv_val * exch_rate

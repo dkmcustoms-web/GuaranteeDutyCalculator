@@ -323,7 +323,8 @@ def main():
     _, col_reset = st.columns([9, 1])
     with col_reset:
         if st.button("🔄 Reset", help="Wis alle gegevens en start opnieuw", use_container_width=True):
-            for key in ["lines", "ref", "user", "currency", "manual_rate"]:
+            for key in ["lines", "ref", "user", "currency", "manual_rate",
+                        "currency_select", "global_rate"]:
                 if key in st.session_state:
                     del st.session_state[key]
             st.rerun()
@@ -582,9 +583,10 @@ def main():
 
     # ── Footer ────────────────────────────────────────────────────────────────
     st.markdown(
-        f'<div class="footer">Berekeningen zijn indicatief. '
-        f'Controleer altijd de officiële TARIC-tarieven. '
-        f'Wisselkoersbron: {rate_source}.</div>',
+        f'<div class="footer">'
+        f'Berekeningen zijn indicatief — controleer altijd de officiële TARIC-tarieven. '
+        f'Wisselkoersbron: {rate_source}. &nbsp;|&nbsp; '
+        f'<b>DKM-Customs</b> — Developed by Luc De Kerf</div>',
         unsafe_allow_html=True,
     )
 

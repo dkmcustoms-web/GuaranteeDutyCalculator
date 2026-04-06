@@ -27,8 +27,15 @@ with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # ── Load commodity data ───────────────────────────────────────────────────────
+def _csv_mtime():
+    """Return file modification time so cache invalidates when CSV changes."""
+    try:
+        return os.path.getmtime("commodities.csv")
+    except Exception:
+        return 0
+
 @st.cache_data
-def load_commodities():
+def load_commodities(_mtime=None):
     df = pd.read_csv("commodities.csv", dtype=str)
     df.columns = df.columns.str.strip()
     df["duty_pct"] = df["duty_pct"].str.replace(",", ".").astype(float)
@@ -289,7 +296,7 @@ def build_pdf(lines_data, ref, user, currency, rate, rate_source,
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     init_state()
-    commodities_df = load_commodities()
+    commodities_df = load_commodities(_mtime=_csv_mtime())
     exchange_rates, rate_source = fetch_exchange_rates()
 
     COMMON_CURRENCIES = ["USD", "GBP", "CHF", "CNY", "JPY", "CAD", "AUD",

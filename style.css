@@ -181,3 +181,16 @@ button[title="Wis alle gegevens en start opnieuw"]:hover {
     color: white !important;
 }
 
+
+/* ── Error row (code not found) ──────────────────────────────────────────── */
+.calc-cell.row-error {
+    background: #fde8e2 !important;
+    border-color: #D94F2B !important;
+    color: #a93226 !important;
+    font-weight: 600;
+}
+.calc-cell.desc-cell.row-error {
+    background: #fde8e2 !important;
+    border-color: #D94F2B !important;
+    color: #a93226 !important;
+}

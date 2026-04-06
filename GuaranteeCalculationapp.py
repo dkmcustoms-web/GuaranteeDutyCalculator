@@ -338,19 +338,25 @@ def main():
         st.session_state.user = st.text_input(
             "👤 Gebruiker", value=st.session_state.user, placeholder="Naam")
     with col_cur:
-        cur_idx = COMMON_CURRENCIES.index(st.session_state.currency) \
-            if st.session_state.currency in COMMON_CURRENCIES else 0
+        cur_options = [None] + COMMON_CURRENCIES
+        saved_cur = st.session_state.currency
+        cur_idx = cur_options.index(saved_cur) if saved_cur in cur_options else 0
         chosen_currency = st.selectbox(
-            "💱 Munteenheid dossier", COMMON_CURRENCIES,
-            index=cur_idx, key="currency_select")
+            "💱 Munteenheid dossier *",
+            options=cur_options,
+            index=cur_idx,
+            format_func=lambda x: "— kies munteenheid —" if x is None else x,
+            key="currency_select")
         st.session_state.currency = chosen_currency
     with col_rate:
-        live_rate = 1.0 if chosen_currency == "EUR" else exchange_rates.get(chosen_currency, 1.0)
+        live_rate = 1.0 if chosen_currency == "EUR" else (
+            exchange_rates.get(chosen_currency, 1.0) if chosen_currency else 1.0)
         default_rate = st.session_state.manual_rate if st.session_state.manual_rate is not None else live_rate
         exch_rate = st.number_input(
             "Koers → EUR", min_value=0.00001, value=float(default_rate),
             step=0.0001, format="%.4f", key="global_rate",
-            help="Automatisch via InforEuro/ECB. Pas manueel aan indien gewenst.")
+            help="Automatisch via InforEuro/ECB. Pas manueel aan indien gewenst.",
+            disabled=(chosen_currency is None))
         st.session_state.manual_rate = exch_rate
     with col_badge:
         if exchange_rates:
@@ -364,6 +370,11 @@ def main():
                 unsafe_allow_html=True)
 
     st.divider()
+
+    # ── Block lines if no currency chosen ─────────────────────────────────────
+    if chosen_currency is None:
+        st.warning("⚠️ Kies eerst een munteenheid voordat je goederencodes kan invullen.")
+        st.stop()
 
     # ── Column headers ────────────────────────────────────────────────────────
     col_widths = [1.5, 1.8, 1.5, 1.3, 1.3, 1.3, 1.3, 0.4]
@@ -381,6 +392,22 @@ def main():
         c = st.columns(col_widths)
 
         # GN-code: user types 8-digit code → lookup → show description or error
+        # Determine status first so we can colour the whole row
+        code_raw = st.session_state.get(f"gncode_{i}", line.get("typed_code", ""))
+        code = code_raw.strip()
+        if code and len(code) == 8:
+            row_m = commodities_df[commodities_df["commodity_code"] == code]
+            code_status = "found" if not row_m.empty else "notfound"
+        elif code:
+            row_m = pd.DataFrame()
+            code_status = "partial"
+        else:
+            row_m = pd.DataFrame()
+            code_status = "empty"
+
+        # Row background: red if code not found
+        row_bg = " row-error" if code_status == "notfound" else ""
+
         with c[0]:
             typed_code = st.text_input(
                 f"gncode_{i}",
@@ -391,34 +418,30 @@ def main():
                 max_chars=8,
             )
             line["typed_code"] = typed_code.strip()
-
-            code = line["typed_code"]
-            row_m = commodities_df[commodities_df["commodity_code"] == code] if code else pd.DataFrame()
-
-            if code == "":
-                duty_pct = 0.0
-                commodity_label = ""
-            elif len(code) < 8:
+            if code_status == "partial":
                 st.caption(f"⏳ {len(code)}/8 cijfers")
-                duty_pct = 0.0
-                commodity_label = ""
-            elif row_m.empty:
-                st.caption("❌ Code niet gevonden")
-                duty_pct = 0.0
-                commodity_label = ""
-            else:
+
+            if code_status == "found":
                 row_f = row_m.iloc[0]
                 duty_pct = row_f["duty_pct"]
                 commodity_label = f"{code} – {row_f['description']}"
-                st.caption(f"✅ {row_f['description']}")
+                desc_display = row_f["description"]
+            else:
+                duty_pct = 0.0
+                commodity_label = ""
+                desc_display = ""
 
         # Omschrijving kolom
         with c[1]:
-            if commodity_label:
-                desc_text = commodity_label.split(" – ", 1)[1] if " – " in commodity_label else commodity_label
-                st.markdown(f"<div class='calc-cell desc-cell'>{desc_text}</div>", unsafe_allow_html=True)
+            if code_status == "found":
+                st.markdown(f"<div class='calc-cell desc-cell{row_bg}'>{desc_display}</div>",
+                            unsafe_allow_html=True)
+            elif code_status == "notfound":
+                st.markdown("<div class='calc-cell desc-cell row-error'>❌ Code niet gevonden</div>",
+                            unsafe_allow_html=True)
             else:
-                st.markdown("<div class='calc-cell desc-cell' style='color:#999;'>–</div>", unsafe_allow_html=True)
+                st.markdown("<div class='calc-cell desc-cell' style='color:#999;'>–</div>",
+                            unsafe_allow_html=True)
 
         # Invoice value — auto-add new line on Enter (value change) if last line
         with c[2]:
@@ -443,13 +466,13 @@ def main():
         total_taxes = duty_calc + vat_calc
 
         with c[3]:
-            st.markdown(f"<div class='calc-cell'>€ {value_eur:,.2f}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='calc-cell{row_bg}'>€ {value_eur:,.2f}</div>", unsafe_allow_html=True)
         with c[4]:
-            st.markdown(f"<div class='calc-cell'>{duty_pct:.2f}%</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='calc-cell{row_bg}'>{duty_pct:.2f}%</div>", unsafe_allow_html=True)
         with c[5]:
-            st.markdown(f"<div class='calc-cell'>€ {duty_calc:,.2f}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='calc-cell{row_bg}'>€ {duty_calc:,.2f}</div>", unsafe_allow_html=True)
         with c[6]:
-            st.markdown(f"<div class='calc-cell'>€ {vat_calc:,.2f}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='calc-cell{row_bg}'>€ {vat_calc:,.2f}</div>", unsafe_allow_html=True)
         with c[7]:
             if st.button("🗑", key=f"del_{i}", help="Verwijder lijn",
                          disabled=len(st.session_state.lines) == 1):

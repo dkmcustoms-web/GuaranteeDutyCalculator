@@ -145,25 +145,23 @@ button[title="Verwijder lijn"] {
 .app-banner {
     background: #D94F2B;
     border-radius: 10px;
-    padding: 1rem 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    padding: 0.6rem 1.5rem 0.6rem 1rem;
     margin-bottom: 1.2rem;
 }
-.banner-left {
-    flex: 0 0 auto;
-    min-width: 160px;
-}
 .banner-title {
-    flex: 1;
-    text-align: center;
     font-size: 2.4rem;
     font-weight: 800;
     color: white;
     letter-spacing: -0.5px;
-    line-height: 1.1;
+    line-height: 1.2;
     text-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    padding-top: 0.5rem;
+}
+
+/* Logo image inside banner — invert to white */
+.app-banner [data-testid="stImage"] img {
+    filter: brightness(0) invert(1);
+    margin-top: 0.3rem;
 }
 
 /* Hide old app-header if present */
@@ -182,3 +180,4 @@ button[title="Wis alle gegevens en start opnieuw"]:hover {
     background: #D94F2B !important;
     color: white !important;
 }
+

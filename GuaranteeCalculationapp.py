@@ -63,13 +63,30 @@ def fetch_exchange_rates():
         pass
     return {}, "Niet beschikbaar"
 
-# ── Logo as base64 ────────────────────────────────────────────────────────────
-@st.cache_data
-def logo_b64():
-    logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "DKM-Logo-kleur-1024x276.png")
+# ── Logo helpers (same pattern as working DKM apps) ──────────────────────────
+LOGO_FILENAME = "DKM-Logo-kleur-1024x276.png"
+LOGO_PATHS = [
+    LOGO_FILENAME,
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), LOGO_FILENAME),
+    f"/mnt/user-data/uploads/{LOGO_FILENAME}",
+    f"static/{LOGO_FILENAME}",
+]
+
+def _find_logo() -> str:
+    """Return first existing logo path, or empty string."""
+    for path in LOGO_PATHS:
+        if os.path.exists(path):
+            return path
+    return ""
+
+def _logo_b64_for_pdf() -> tuple:
+    """Return (base64_str, path) for PDF embedding."""
+    path = _find_logo()
+    if not path:
+        return None, None
     try:
-        with open(logo_path, "rb") as f:
-            return base64.b64encode(f.read()).decode(), logo_path
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode(), path
     except Exception:
         return None, None
 
@@ -278,20 +295,22 @@ def main():
     COMMON_CURRENCIES = ["USD", "GBP", "CHF", "CNY", "JPY", "CAD", "AUD",
                          "NOK", "SEK", "DKK", "EUR", "HKD", "SGD", "INR"]
 
-    # ── Header: full-width red banner ─────────────────────────────────────────
-    logo_data, logo_path = logo_b64()
-    logo_html = (
-        f'<img src="data:image/png;base64,{logo_data}" '
-        f'style="height:60px;filter:brightness(0) invert(1);vertical-align:middle;">'
-        if logo_data else
-        '<span style="font-size:2rem;font-weight:900;color:white;">DKM</span>'
-    )
-    st.markdown(f"""
-    <div class="app-banner">
-        <div class="banner-left">{logo_html}</div>
-        <div class="banner-title">Guarantee Calculation</div>
-    </div>
-    """, unsafe_allow_html=True)
+    # ── Header: red banner with logo (st.image) + title ─────────────────────
+    logo_path = _find_logo()
+
+    # Build banner: columns inside a styled container
+    st.markdown('<div class="app-banner">', unsafe_allow_html=True)
+    col_logo, col_title = st.columns([1, 4])
+    with col_logo:
+        if logo_path:
+            st.image(logo_path, width=190)
+        else:
+            st.markdown('<span style="color:white;font-size:1.8rem;font-weight:900;">DKM</span>',
+                        unsafe_allow_html=True)
+    with col_title:
+        st.markdown('<div class="banner-title">Guarantee Calculation</div>',
+                    unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # Reset button
     _, col_reset = st.columns([9, 1])
@@ -468,6 +487,7 @@ def main():
         # PDF — filter lege lijnen (geen commodity geselecteerd)
         pdf_lines = [ld for ld in lines_data if ld.get("Commodity")]
         with col_pdf:
+            _, _pdf_logo_path = _logo_b64_for_pdf()
             pdf_bytes = build_pdf(
                 pdf_lines,
                 st.session_state.ref,
@@ -476,7 +496,7 @@ def main():
                 exch_rate,
                 rate_source,
                 total_eur, total_duty, total_vat, total_taxes,
-                logo_path=logo_path,
+                logo_path=_pdf_logo_path,
             )
             st.download_button(
                 "🖨️ Download PDF",

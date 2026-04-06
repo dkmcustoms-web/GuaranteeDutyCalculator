@@ -350,30 +350,34 @@ def main():
             "👤 Gebruiker", value=st.session_state.user, placeholder="Naam")
     with col_cur:
         cur_options = [None] + COMMON_CURRENCIES
-        saved_cur = st.session_state.currency
-        cur_idx = cur_options.index(saved_cur) if saved_cur in cur_options else 0
+        # Track previous currency BEFORE the selectbox updates it
+        prev_currency = st.session_state.get("currency", None)
+        cur_idx = cur_options.index(prev_currency) if prev_currency in cur_options else 0
         chosen_currency = st.selectbox(
             "💱 Munteenheid dossier *",
             options=cur_options,
             index=cur_idx,
             format_func=lambda x: "— kies munteenheid —" if x is None else x,
             key="currency_select")
-        # Reset manual rate when currency changes
-        if chosen_currency != st.session_state.currency:
+        # If currency changed: wipe the rate widget so it redraws with new live rate
+        if chosen_currency != prev_currency:
             st.session_state.manual_rate = None
-            if 'global_rate' in st.session_state:
-                del st.session_state['global_rate']
+            st.session_state.currency = chosen_currency
+            for k in list(st.session_state.keys()):
+                if k == "global_rate":
+                    del st.session_state[k]
+            st.rerun()
         st.session_state.currency = chosen_currency
     with col_rate:
         live_rate = 1.0 if chosen_currency == "EUR" else (
             exchange_rates.get(chosen_currency, 1.0) if chosen_currency else 1.0)
-        # Always use live rate — only keep manual_rate if currency hasn't changed
-        default_rate = live_rate if st.session_state.manual_rate is None else st.session_state.manual_rate
+        default_rate = st.session_state.manual_rate if st.session_state.manual_rate is not None else live_rate
         exch_rate = st.number_input(
             "Koers → EUR", min_value=0.00001, value=float(default_rate),
             step=0.0001, format="%.4f", key="global_rate",
             help="Automatisch via InforEuro/ECB. Pas manueel aan indien gewenst.",
             disabled=(chosen_currency is None))
+        # Only store as manual if user deviated from live rate
         st.session_state.manual_rate = exch_rate if exch_rate != live_rate else None
     with col_badge:
         if exchange_rates:

@@ -1,44 +1,96 @@
-/* ── Global ──────────────────────────────────────────────────────────────── */
+/* ── Global — dark theme ─────────────────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-html, body, [class*="css"] {
+html, body, [class*="css"], .stApp {
     font-family: 'Inter', sans-serif;
+    background-color: #1a1a2e !important;
+    color: #e0e0e0 !important;
 }
 
-/* ── Header ──────────────────────────────────────────────────────────────── */
-.app-header {
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: #1a2e4a;
-    padding: 0.6rem 0 0.1rem 0;
-    border-bottom: 3px solid #D94F2B;
-    margin-bottom: 0.25rem;
+[data-testid="stAppViewContainer"] {
+    background-color: #1a1a2e !important;
+}
+
+[data-testid="stHeader"] {
+    background-color: #1a1a2e !important;
+}
+
+/* ── App banner ──────────────────────────────────────────────────────────── */
+.app-banner {
+    background: #D94F2B;
+    border-radius: 10px;
+    padding: 0.5rem 1rem 0.5rem 1rem;
+    margin-bottom: 1.2rem;
+}
+.banner-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
     letter-spacing: -0.5px;
+    line-height: 1.2;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    padding-top: 0.6rem;
+}
+.banner-btns {
+    padding-top: 0.5rem;
+}
+
+/* Logo image inside banner — invert to white */
+.app-banner [data-testid="stImage"] img {
+    filter: brightness(0) invert(1);
+    margin-top: 0.2rem;
+}
+
+/* Download buttons in banner — white style */
+.app-banner .stDownloadButton > button {
+    background: rgba(255,255,255,0.15) !important;
+    color: white !important;
+    border: 1px solid rgba(255,255,255,0.5) !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    font-size: 0.78rem !important;
+    padding: 0.3rem 0.4rem !important;
+}
+.app-banner .stDownloadButton > button:hover {
+    background: rgba(255,255,255,0.3) !important;
+}
+
+/* Reset button in banner */
+.app-banner .stButton > button {
+    background: rgba(255,255,255,0.15) !important;
+    color: white !important;
+    border: 1px solid rgba(255,255,255,0.5) !important;
+    border-radius: 6px !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+}
+.app-banner .stButton > button:hover {
+    background: rgba(255,255,255,0.3) !important;
 }
 
 /* ── Column headers ──────────────────────────────────────────────────────── */
 .col-header {
-    font-size: 0.70rem;
+    font-size: 0.68rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #6b7a8d;
+    color: #8899aa;
     padding: 0.25rem 0;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid #2d3748;
     margin-bottom: 0.4rem;
 }
 
 /* ── Calculated cells ────────────────────────────────────────────────────── */
 .calc-cell {
-    background: #f0f4fa;
+    background: #16213e;
     border-radius: 6px;
     padding: 0.45rem 0.6rem;
     font-size: 0.84rem;
     font-weight: 500;
-    color: #1e3a5f;
+    color: #c8d8e8;
     text-align: right;
     margin-top: 0.35rem;
-    border: 1px solid #dce6f0;
+    border: 1px solid #2d3748;
     min-height: 2.45rem;
     display: flex;
     align-items: center;
@@ -46,47 +98,58 @@ html, body, [class*="css"] {
     overflow: hidden;
 }
 
-/* Description cell */
 .calc-cell.desc-cell {
     text-align: left;
     justify-content: flex-start;
-    font-size: 0.78rem;
-    color: #3a4f6a;
+    font-size: 0.82rem;
+    color: #a8c0d0;
     white-space: nowrap;
-    overflow: hidden;
     text-overflow: ellipsis;
     display: block;
     padding-top: 0.55rem;
 }
 
+/* ── Error row (code not found) ──────────────────────────────────────────── */
+.calc-cell.row-error {
+    background: #3d1515 !important;
+    border-color: #D94F2B !important;
+    color: #ff8070 !important;
+    font-weight: 600;
+}
+.calc-cell.desc-cell.row-error {
+    background: #3d1515 !important;
+    border-color: #D94F2B !important;
+    color: #ff8070 !important;
+}
+
 /* ── Rate badge ──────────────────────────────────────────────────────────── */
 .rate-badge {
-    background: #e8f5e9;
-    border: 1px solid #a5d6a7;
+    background: #1a2e1a;
+    border: 1px solid #2d5a2d;
     border-radius: 8px;
     padding: 0.45rem 0.8rem;
     font-size: 0.76rem;
-    color: #2e7d32;
+    color: #6abf6a;
     margin-top: 1.6rem;
     line-height: 1.5;
 }
 .rate-badge.warn {
-    background: #fff8e1;
-    border-color: #ffcc80;
-    color: #e65100;
+    background: #2e2a1a;
+    border-color: #5a4a1a;
+    color: #c8a020;
 }
 
 /* ── Metrics ─────────────────────────────────────────────────────────────── */
 [data-testid="metric-container"] {
-    background: #f8fafd;
-    border: 1px solid #dce6f0;
+    background: #16213e;
+    border: 1px solid #2d3748;
     border-radius: 10px;
     padding: 1rem 1.2rem;
 }
 [data-testid="metric-container"] [data-testid="stMetricLabel"] {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #6b7a8d;
+    color: #8899aa;
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -96,39 +159,35 @@ html, body, [class*="css"] {
     color: #D94F2B;
 }
 
-/* ── Download buttons ────────────────────────────────────────────────────── */
+/* ── Global download/action buttons ─────────────────────────────────────── */
 .stDownloadButton > button {
-    background: #D94F2B;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.9rem;
+    background: #D94F2B !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
 }
 .stDownloadButton > button:hover {
-    background: #b83d1f;
+    background: #b83d1f !important;
 }
 
-/* ── Footer ──────────────────────────────────────────────────────────────── */
-.footer {
-    margin-top: 2rem;
-    font-size: 0.72rem;
-    color: #9aa5b4;
-    text-align: center;
-    padding-top: 0.75rem;
-    border-top: 1px solid #e2e8f0;
-}
-
-/* ── Inputs ──────────────────────────────────────────────────────────────── */
-.stNumberInput input, .stTextInput input {
+/* ── Inputs — dark style ─────────────────────────────────────────────────── */
+.stTextInput input, .stNumberInput input {
+    background: #16213e !important;
+    color: #e0e0e0 !important;
+    border: 1px solid #2d3748 !important;
     border-radius: 6px !important;
-    border: 1px solid #dce6f0 !important;
-    font-size: 0.88rem !important;
 }
 .stSelectbox > div > div {
+    background: #16213e !important;
+    color: #e0e0e0 !important;
+    border: 1px solid #2d3748 !important;
     border-radius: 6px !important;
-    border: 1px solid #dce6f0 !important;
-    font-size: 0.88rem !important;
+}
+
+/* ── Divider ─────────────────────────────────────────────────────────────── */
+hr {
+    border-color: #2d3748 !important;
 }
 
 /* ── Delete button ───────────────────────────────────────────────────────── */
@@ -141,56 +200,20 @@ button[title="Verwijder lijn"] {
     margin-top: 0.35rem;
 }
 
-/* ── App banner ──────────────────────────────────────────────────────────── */
-.app-banner {
-    background: #D94F2B;
-    border-radius: 10px;
-    padding: 0.6rem 1.5rem 0.6rem 1rem;
-    margin-bottom: 1.2rem;
-}
-.banner-title {
-    font-size: 2.4rem;
-    font-weight: 800;
-    color: white;
-    letter-spacing: -0.5px;
-    line-height: 1.2;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.15);
-    padding-top: 0.5rem;
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+.footer {
+    margin-top: 2rem;
+    font-size: 0.72rem;
+    color: #556677;
+    text-align: center;
+    padding-top: 0.75rem;
+    border-top: 1px solid #2d3748;
 }
 
-/* Logo image inside banner — invert to white */
-.app-banner [data-testid="stImage"] img {
-    filter: brightness(0) invert(1);
-    margin-top: 0.3rem;
+/* ── Labels and captions ─────────────────────────────────────────────────── */
+label, .stCaption, small {
+    color: #8899aa !important;
 }
 
-/* Hide old app-header if present */
+/* ── Hide old app-header ─────────────────────────────────────────────────── */
 .app-header { display: none; }
-
-/* ── Reset button ────────────────────────────────────────────────────────── */
-button[title="Wis alle gegevens en start opnieuw"] {
-    background: #fff3f0 !important;
-    color: #D94F2B !important;
-    border: 2px solid #D94F2B !important;
-    border-radius: 8px !important;
-    font-weight: 700 !important;
-    font-size: 0.85rem !important;
-}
-button[title="Wis alle gegevens en start opnieuw"]:hover {
-    background: #D94F2B !important;
-    color: white !important;
-}
-
-
-/* ── Error row (code not found) ──────────────────────────────────────────── */
-.calc-cell.row-error {
-    background: #fde8e2 !important;
-    border-color: #D94F2B !important;
-    color: #a93226 !important;
-    font-weight: 600;
-}
-.calc-cell.desc-cell.row-error {
-    background: #fde8e2 !important;
-    border-color: #D94F2B !important;
-    color: #a93226 !important;
-}

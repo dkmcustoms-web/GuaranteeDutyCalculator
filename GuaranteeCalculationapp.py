@@ -302,32 +302,42 @@ def main():
     COMMON_CURRENCIES = ["USD", "GBP", "CHF", "CNY", "JPY", "CAD", "AUD",
                          "NOK", "SEK", "DKK", "EUR", "HKD", "SGD", "INR"]
 
-    # ── Header: red banner with logo (st.image) + title ─────────────────────
+    # ── Header: red banner with logo | title | export buttons | reset ───────
     logo_path = _find_logo()
 
-    # Build banner: columns inside a styled container
+    # Pre-build export data so buttons are available in the banner
+    # (data will be empty on first load — buttons shown but disabled)
+    _has_data = bool(st.session_state.get('lines') and
+                     any(l.get('typed_code','') for l in st.session_state.get('lines',[])))
+
     st.markdown('<div class="app-banner">', unsafe_allow_html=True)
-    col_logo, col_title = st.columns([1, 4])
+    col_logo, col_title, col_btns = st.columns([1, 3, 2])
     with col_logo:
         if logo_path:
-            st.image(logo_path, width=190)
+            st.image(logo_path, width=170)
         else:
             st.markdown('<span style="color:white;font-size:1.8rem;font-weight:900;">DKM</span>',
                         unsafe_allow_html=True)
     with col_title:
         st.markdown('<div class="banner-title">Guarantee Calculation</div>',
                     unsafe_allow_html=True)
+    with col_btns:
+        st.markdown('<div class="banner-btns">', unsafe_allow_html=True)
+        bb1, bb2, bb3, bb4 = st.columns([1, 1, 1, 0.7])
+        # Placeholders — actual download buttons rendered after data is computed
+        _ph_pdf  = bb1.empty()
+        _ph_xl   = bb2.empty()
+        _ph_csv  = bb3.empty()
+        with bb4:
+            if st.button("🔄", help="Wis alle gegevens en start opnieuw",
+                         use_container_width=True, key="reset_btn"):
+                for key in ["lines", "ref", "user", "currency", "manual_rate",
+                            "currency_select", "global_rate"]:
+                    if key in st.session_state:
+                        del st.session_state[key]
+                st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
-
-    # Reset button
-    _, col_reset = st.columns([9, 1])
-    with col_reset:
-        if st.button("🔄 Reset", help="Wis alle gegevens en start opnieuw", use_container_width=True):
-            for key in ["lines", "ref", "user", "currency", "manual_rate",
-                        "currency_select", "global_rate"]:
-                if key in st.session_state:
-                    del st.session_state[key]
-            st.rerun()
 
     # ── Dossier info row ──────────────────────────────────────────────────────
     col_ref, col_user, col_cur, col_rate, col_badge = st.columns([2, 2, 1.4, 1.4, 2.5])
@@ -519,67 +529,54 @@ def main():
 
         st.divider()
 
-        # ── Export ────────────────────────────────────────────────────────────
-        st.markdown("### 📥 Export")
+        # ── Fill banner export placeholders with real data ────────────────────
         export_df = df_lines.copy()
         export_df.insert(0, "Referentie", st.session_state.ref)
         export_df.insert(1, "Gebruiker", st.session_state.user)
-
-        col_pdf, col_xl, col_csv = st.columns([1, 1, 1])
-
-        # PDF — filter lege lijnen (geen commodity geselecteerd)
         pdf_lines = [ld for ld in lines_data if ld.get("Commodity")]
-        with col_pdf:
-            _, _pdf_logo_path = _logo_b64_for_pdf()
-            pdf_bytes = build_pdf(
-                pdf_lines,
-                st.session_state.ref,
-                st.session_state.user,
-                chosen_currency,
-                exch_rate,
-                rate_source,
-                total_eur, total_duty, total_vat, total_taxes,
-                logo_path=_pdf_logo_path,
-            )
-            st.download_button(
-                "🖨️ Download PDF",
-                data=pdf_bytes,
-                file_name=f"guarantee_{st.session_state.ref or 'export'}_{datetime.now().strftime('%Y%m%d')}.pdf",
-                mime="application/pdf",
-                use_container_width=True,
-            )
-
-        # Excel
-        with col_xl:
-            buffer = io.BytesIO()
-            with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
-                export_df.to_excel(writer, index=False, sheet_name="Berekening")
-                from openpyxl.styles import Font
-                ws = writer.sheets["Berekening"]
-                last_row = len(export_df) + 2
-                ws.cell(last_row, 1, "TOTAAL").font = Font(bold=True)
-                ws.cell(last_row, 7, total_eur).font = Font(bold=True)
-                ws.cell(last_row, 9, total_duty).font = Font(bold=True)
-                ws.cell(last_row, 10, total_vat).font = Font(bold=True)
-                ws.cell(last_row, 11, total_taxes).font = Font(bold=True)
-            st.download_button(
-                "⬇️ Download Excel",
-                data=buffer.getvalue(),
-                file_name=f"guarantee_{st.session_state.ref or 'export'}_{datetime.now().strftime('%Y%m%d')}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True,
-            )
-
-        # CSV
-        with col_csv:
-            csv_bytes = export_df.to_csv(index=False, sep=";", decimal=",").encode("utf-8-sig")
-            st.download_button(
-                "⬇️ Download CSV",
-                data=csv_bytes,
-                file_name=f"guarantee_{st.session_state.ref or 'export'}_{datetime.now().strftime('%Y%m%d')}.csv",
-                mime="text/csv",
-                use_container_width=True,
-            )
+        _, _pdf_logo_path = _logo_b64_for_pdf()
+        pdf_bytes = build_pdf(
+            pdf_lines, st.session_state.ref, st.session_state.user,
+            chosen_currency, exch_rate, rate_source,
+            total_eur, total_duty, total_vat, total_taxes,
+            logo_path=_pdf_logo_path,
+        )
+        _ph_pdf.download_button(
+            "🖨️ PDF",
+            data=pdf_bytes,
+            file_name=f"guarantee_{st.session_state.ref or 'export'}_{datetime.now().strftime('%Y%m%d')}.pdf",
+            mime="application/pdf",
+            use_container_width=True,
+            key="dl_pdf",
+        )
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+            export_df.to_excel(writer, index=False, sheet_name="Berekening")
+            from openpyxl.styles import Font
+            ws = writer.sheets["Berekening"]
+            last_row = len(export_df) + 2
+            ws.cell(last_row, 1, "TOTAAL").font = Font(bold=True)
+            ws.cell(last_row, 7, total_eur).font = Font(bold=True)
+            ws.cell(last_row, 9, total_duty).font = Font(bold=True)
+            ws.cell(last_row, 10, total_vat).font = Font(bold=True)
+            ws.cell(last_row, 11, total_taxes).font = Font(bold=True)
+        _ph_xl.download_button(
+            "⬇️ Excel",
+            data=buffer.getvalue(),
+            file_name=f"guarantee_{st.session_state.ref or 'export'}_{datetime.now().strftime('%Y%m%d')}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=True,
+            key="dl_xl",
+        )
+        csv_bytes = export_df.to_csv(index=False, sep=";", decimal=",").encode("utf-8-sig")
+        _ph_csv.download_button(
+            "⬇️ CSV",
+            data=csv_bytes,
+            file_name=f"guarantee_{st.session_state.ref or 'export'}_{datetime.now().strftime('%Y%m%d')}.csv",
+            mime="text/csv",
+            use_container_width=True,
+            key="dl_csv",
+        )
 
     # ── Footer ────────────────────────────────────────────────────────────────
     st.markdown(

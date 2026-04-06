@@ -43,9 +43,13 @@ def load_commodities(_mtime=None):
     return df
 
 # ── Fetch exchange rates ──────────────────────────────────────────────────────
+# Rates are stored as: how many EUR per 1 unit of foreign currency
+# e.g. USD -> 0.9259 means 1 USD = 0.9259 EUR
 @st.cache_data(ttl=3600)
 def fetch_exchange_rates():
     rates = {}
+    # Try InforEuro (EC official monthly rates)
+    # InforEuro value = how many X per 1 EUR  → invert to get EUR per X
     try:
         url = "https://ec.europa.eu/budg/inforeuro/api/public/monthly-rates"
         resp = requests.get(url, timeout=8)
@@ -53,17 +57,21 @@ def fetch_exchange_rates():
             for item in resp.json():
                 iso = item.get("isoA3Code", "").upper()
                 rate = item.get("value")
-                if iso and rate:
-                    rates[iso] = float(rate)
-            if rates:
+                if iso and rate and float(rate) > 0:
+                    rates[iso] = round(1 / float(rate), 6)  # invert: EUR per X
+            rates["EUR"] = 1.0
+            if len(rates) > 1:
                 return rates, "InforEuro (EC officieel)"
     except Exception:
         pass
+    # Fallback: Frankfurter/ECB
+    # Frankfurter rates = how many X per 1 EUR → invert to get EUR per X
     try:
         resp = requests.get("https://api.frankfurter.app/latest?from=EUR", timeout=8)
         if resp.status_code == 200:
             for currency, rate in resp.json().get("rates", {}).items():
-                rates[currency.upper()] = round(1 / rate, 6)
+                if float(rate) > 0:
+                    rates[currency.upper()] = round(1 / float(rate), 6)
             rates["EUR"] = 1.0
             return rates, "Frankfurter / ECB (dagelijks)"
     except Exception:
@@ -350,7 +358,6 @@ def main():
             "👤 Gebruiker", value=st.session_state.user, placeholder="Naam")
     with col_cur:
         cur_options = [None] + COMMON_CURRENCIES
-        # Track previous currency BEFORE the selectbox updates it
         prev_currency = st.session_state.get("currency", None)
         cur_idx = cur_options.index(prev_currency) if prev_currency in cur_options else 0
         chosen_currency = st.selectbox(
@@ -359,26 +366,28 @@ def main():
             index=cur_idx,
             format_func=lambda x: "— kies munteenheid —" if x is None else x,
             key="currency_select")
-        # If currency changed: wipe the rate widget so it redraws with new live rate
+        # When currency changes, clear saved manual rate
         if chosen_currency != prev_currency:
             st.session_state.manual_rate = None
-            st.session_state.currency = chosen_currency
-            for k in list(st.session_state.keys()):
-                if k == "global_rate":
-                    del st.session_state[k]
-            st.rerun()
         st.session_state.currency = chosen_currency
     with col_rate:
-        live_rate = 1.0 if chosen_currency == "EUR" else (
-            exchange_rates.get(chosen_currency, 1.0) if chosen_currency else 1.0)
-        default_rate = st.session_state.manual_rate if st.session_state.manual_rate is not None else live_rate
+        # Live rate: EUR per 1 unit of chosen currency
+        if chosen_currency is None:
+            live_rate = 1.0
+        elif chosen_currency == "EUR":
+            live_rate = 1.0
+        else:
+            live_rate = exchange_rates.get(chosen_currency, 1.0)
+        # Use manual rate only if it was set for the CURRENT currency
+        # (manual_rate is cleared on currency change above)
+        exch_rate_val = st.session_state.manual_rate if st.session_state.manual_rate is not None else live_rate
         exch_rate = st.number_input(
-            "Koers → EUR", min_value=0.00001, value=float(default_rate),
-            step=0.0001, format="%.4f", key="global_rate",
+            "Koers → EUR", min_value=0.00001, value=float(exch_rate_val),
+            step=0.0001, format="%.4f",
             help="Automatisch via InforEuro/ECB. Pas manueel aan indien gewenst.",
-            disabled=(chosen_currency is None))
-        # Only store as manual if user deviated from live rate
-        st.session_state.manual_rate = exch_rate if exch_rate != live_rate else None
+            disabled=(chosen_currency is None),
+            key=f"rate_{chosen_currency}")
+        st.session_state.manual_rate = exch_rate
     with col_badge:
         if exchange_rates:
             st.markdown(

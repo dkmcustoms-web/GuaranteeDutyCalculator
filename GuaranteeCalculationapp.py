@@ -373,27 +373,31 @@ def main():
     for i, line in enumerate(st.session_state.lines):
         c = st.columns(col_widths)
 
-        # GN-code search: text input sets the filter prefix,
-        # selectbox shows only matching codes (≤200) so Streamlit displays all of them.
+        # GN-code: text input triggers rerun → filtered selectbox always in sync
         with c[0]:
+            # Read typed prefix directly from session state (always current)
+            search_key = f"search_{i}"
+            prefix = st.session_state.get(search_key, line.get("typed_code", "")).strip()
+
             search_col, sel_col = st.columns([1, 2])
 
             with search_col:
-                typed_prefix = st.text_input(
+                st.text_input(
                     f"search_{i}",
-                    value=line.get("typed_code", ""),
-                    placeholder="🔍 typ code...",
-                    key=f"search_{i}",
+                    value=prefix,
+                    placeholder="🔍 typ GN-code...",
+                    key=search_key,
                     label_visibility="collapsed",
-                    max_chars=10,
+                    max_chars=8,
                 )
-                # Update stored prefix
-                if typed_prefix != line.get("typed_code", ""):
-                    line["typed_code"] = typed_prefix.strip()
-                    line["commodity_label"] = ""  # reset selection when filter changes
+                # Always use the live session state value for filtering
+                prefix = st.session_state.get(search_key, "").strip()
+                # If prefix changed, reset saved selection
+                if prefix != line.get("typed_code", ""):
+                    line["typed_code"] = prefix
+                    line["commodity_label"] = ""
 
             with sel_col:
-                prefix = line.get("typed_code", "").strip()
                 if prefix:
                     filtered_df = commodities_df[
                         commodities_df["commodity_code"].str.startswith(prefix)

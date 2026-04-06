@@ -465,10 +465,11 @@ def main():
 
         col_pdf, col_xl, col_csv = st.columns([1, 1, 1])
 
-        # PDF
+        # PDF — filter lege lijnen (geen commodity geselecteerd)
+        pdf_lines = [ld for ld in lines_data if ld.get("Commodity")]
         with col_pdf:
             pdf_bytes = build_pdf(
-                lines_data,
+                pdf_lines,
                 st.session_state.ref,
                 st.session_state.user,
                 chosen_currency,

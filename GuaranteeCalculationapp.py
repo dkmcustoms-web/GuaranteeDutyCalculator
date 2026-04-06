@@ -104,7 +104,7 @@ def init_state():
             st.session_state[k] = v
 
 def new_line():
-    return {"typed_code": "", "selected_code": "", "invoice_value": 0.0}
+    return {"typed_code": "", "commodity_label": "", "invoice_value": 0.0}
 
 # ── PDF generation ────────────────────────────────────────────────────────────
 def build_pdf(lines_data, ref, user, currency, rate, rate_source,
@@ -359,8 +359,9 @@ def main():
     st.divider()
 
     # ── Column headers ────────────────────────────────────────────────────────
-    col_widths = [1.6, 3.2, 1.5, 1.3, 1.3, 1.3, 1.3, 0.4]
-    headers = ["GN-code", "Omschrijving", f"Factuurwaarde ({chosen_currency})",
+    col_widths = [4.8, 1.5, 1.3, 1.3, 1.3, 1.3, 0.4]
+    headers = [f"GN-code + Omschrijving  (typ code om te zoeken)",
+               f"Factuurwaarde ({chosen_currency})",
                "Waarde EUR", "Duty %", "Duty", "BTW (21%)", ""]
     h_cols = st.columns(col_widths)
     for hc, ht in zip(h_cols, headers):
@@ -372,65 +373,64 @@ def main():
     for i, line in enumerate(st.session_state.lines):
         c = st.columns(col_widths)
 
-        # Col 0: type GN-code → filter to max 50 matches → selectbox
+        # GN-code search: text input sets the filter prefix,
+        # selectbox shows only matching codes (≤200) so Streamlit displays all of them.
         with c[0]:
-            typed = st.text_input(
-                f"gncode_{i}",
-                value=line.get("typed_code", ""),
-                placeholder="typ code...",
-                key=f"typed_{i}",
-                label_visibility="collapsed",
-                max_chars=8,
-            )
-            line["typed_code"] = typed.strip()
+            search_col, sel_col = st.columns([1, 2])
 
-        # Col 1: filtered dropdown based on typed code
-        with c[1]:
-            mask = commodities_df["commodity_code"].str.startswith(line["typed_code"])                 if line["typed_code"] else pd.Series([False] * len(commodities_df))
-            filtered = commodities_df[mask]
+            with search_col:
+                typed_prefix = st.text_input(
+                    f"search_{i}",
+                    value=line.get("typed_code", ""),
+                    placeholder="🔍 typ code...",
+                    key=f"search_{i}",
+                    label_visibility="collapsed",
+                    max_chars=10,
+                )
+                # Update stored prefix
+                if typed_prefix != line.get("typed_code", ""):
+                    line["typed_code"] = typed_prefix.strip()
+                    line["commodity_label"] = ""  # reset selection when filter changes
 
-            if line["typed_code"] == "":
-                st.markdown("<div class='calc-cell desc-cell'>— typ een code links —</div>",
-                            unsafe_allow_html=True)
-                duty_pct = 0.0
-                commodity_label = ""
-                line["selected_code"] = ""
-            elif filtered.empty:
-                st.markdown("<div class='calc-cell desc-cell' style='color:#c0392b;'>Niet gevonden</div>",
-                            unsafe_allow_html=True)
-                duty_pct = 0.0
-                commodity_label = ""
-                line["selected_code"] = ""
-            elif len(filtered) == 1:
-                # Exact single match — show as read-only
-                row_f = filtered.iloc[0]
-                desc = row_f["description"]
-                duty_pct = row_f["duty_pct"]
-                commodity_label = f"{row_f['commodity_code']} – {desc}"
-                line["selected_code"] = row_f["commodity_code"]
-                st.markdown(f"<div class='calc-cell desc-cell'>{commodity_label}</div>",
-                            unsafe_allow_html=True)
-            else:
-                # Multiple matches → small dropdown (max 50)
-                opts = [f"{r['commodity_code']} – {r['description']}"
-                        for _, r in filtered.head(50).iterrows()]
-                # Try to keep previous selection
-                prev = line.get("selected_code", "")
-                prev_opt = next((o for o in opts if o.startswith(prev)), opts[0])
-                sel_opt = st.selectbox(
-                    f"desc_{i}", opts,
-                    index=opts.index(prev_opt),
-                    key=f"desc_{i}",
+            with sel_col:
+                prefix = line.get("typed_code", "").strip()
+                if prefix:
+                    filtered_df = commodities_df[
+                        commodities_df["commodity_code"].str.startswith(prefix)
+                    ].head(200)
+                else:
+                    filtered_df = commodities_df.head(200)
+
+                opts = [""] + [
+                    f"{r['commodity_code']} – {r['description']}"
+                    for _, r in filtered_df.iterrows()
+                ]
+                saved_label = line.get("commodity_label", "")
+                sel_idx = opts.index(saved_label) if saved_label in opts else 0
+
+                sel = st.selectbox(
+                    f"comm_{i}",
+                    options=opts,
+                    index=sel_idx,
+                    format_func=lambda x: "— selecteer —" if x == "" else x,
+                    key=f"comm_{i}",
                     label_visibility="collapsed",
                 )
-                sel_code = sel_opt.split(" – ")[0]
-                line["selected_code"] = sel_code
-                row_match_sel = commodities_df[commodities_df["commodity_code"] == sel_code]
-                duty_pct = row_match_sel.iloc[0]["duty_pct"] if not row_match_sel.empty else 0.0
-                commodity_label = sel_opt
+
+                if sel == "":
+                    duty_pct = 0.0
+                    commodity_label = ""
+                    line["commodity_label"] = ""
+                else:
+                    line["commodity_label"] = sel
+                    sel_code = sel.split(" – ")[0].strip()
+                    line["typed_code"] = sel_code
+                    row_m = commodities_df[commodities_df["commodity_code"] == sel_code]
+                    duty_pct = row_m.iloc[0]["duty_pct"] if not row_m.empty else 0.0
+                    commodity_label = sel
 
         # Invoice value — auto-add new line on Enter (value change) if last line
-        with c[2]:
+        with c[1]:
             prev_val = float(line.get("invoice_value", 0.0))
             inv_val = st.number_input(
                 f"inv_{i}", min_value=0.0, value=prev_val,
@@ -451,15 +451,15 @@ def main():
         vat_calc = (value_eur + duty_calc) * 0.21
         total_taxes = duty_calc + vat_calc
 
-        with c[3]:
+        with c[2]:
             st.markdown(f"<div class='calc-cell'>€ {value_eur:,.2f}</div>", unsafe_allow_html=True)
-        with c[4]:
+        with c[3]:
             st.markdown(f"<div class='calc-cell'>{duty_pct:.2f}%</div>", unsafe_allow_html=True)
-        with c[5]:
+        with c[4]:
             st.markdown(f"<div class='calc-cell'>€ {duty_calc:,.2f}</div>", unsafe_allow_html=True)
-        with c[6]:
+        with c[5]:
             st.markdown(f"<div class='calc-cell'>€ {vat_calc:,.2f}</div>", unsafe_allow_html=True)
-        with c[7]:
+        with c[6]:
             if st.button("🗑", key=f"del_{i}", help="Verwijder lijn",
                          disabled=len(st.session_state.lines) == 1):
                 st.session_state.lines.pop(i)

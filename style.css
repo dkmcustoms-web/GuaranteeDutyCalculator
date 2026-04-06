@@ -140,3 +140,45 @@ button[title="Verwijder lijn"] {
     font-size: 0.8rem !important;
     margin-top: 0.35rem;
 }
+
+/* ── App banner ──────────────────────────────────────────────────────────── */
+.app-banner {
+    background: #D94F2B;
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.2rem;
+}
+.banner-left {
+    flex: 0 0 auto;
+    min-width: 160px;
+}
+.banner-title {
+    flex: 1;
+    text-align: center;
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: white;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+
+/* Hide old app-header if present */
+.app-header { display: none; }
+
+/* ── Reset button ────────────────────────────────────────────────────────── */
+button[title="Wis alle gegevens en start opnieuw"] {
+    background: #fff3f0 !important;
+    color: #D94F2B !important;
+    border: 2px solid #D94F2B !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    font-size: 0.85rem !important;
+}
+button[title="Wis alle gegevens en start opnieuw"]:hover {
+    background: #D94F2B !important;
+    color: white !important;
+}

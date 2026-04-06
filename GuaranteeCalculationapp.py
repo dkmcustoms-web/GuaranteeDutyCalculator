@@ -278,17 +278,29 @@ def main():
     COMMON_CURRENCIES = ["USD", "GBP", "CHF", "CNY", "JPY", "CAD", "AUD",
                          "NOK", "SEK", "DKK", "EUR", "HKD", "SGD", "INR"]
 
-    # ── Header: logo + title ──────────────────────────────────────────────────
+    # ── Header: full-width red banner ─────────────────────────────────────────
     logo_data, logo_path = logo_b64()
-    col_logo, col_title = st.columns([1, 4])
-    with col_logo:
-        if logo_data:
-            st.markdown(
-                f'<img src="data:image/png;base64,{logo_data}" style="height:52px;margin-top:4px;">',
-                unsafe_allow_html=True,
-            )
-    with col_title:
-        st.markdown('<div class="app-header">Guarantee Calculation</div>', unsafe_allow_html=True)
+    logo_html = (
+        f'<img src="data:image/png;base64,{logo_data}" '
+        f'style="height:60px;filter:brightness(0) invert(1);vertical-align:middle;">'
+        if logo_data else
+        '<span style="font-size:2rem;font-weight:900;color:white;">DKM</span>'
+    )
+    st.markdown(f"""
+    <div class="app-banner">
+        <div class="banner-left">{logo_html}</div>
+        <div class="banner-title">Guarantee Calculation</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Reset button
+    _, col_reset = st.columns([9, 1])
+    with col_reset:
+        if st.button("🔄 Reset", help="Wis alle gegevens en start opnieuw", use_container_width=True):
+            for key in ["lines", "ref", "user", "currency", "manual_rate"]:
+                if key in st.session_state:
+                    del st.session_state[key]
+            st.rerun()
 
     # ── Dossier info row ──────────────────────────────────────────────────────
     col_ref, col_user, col_cur, col_rate, col_badge = st.columns([2, 2, 1.4, 1.4, 2.5])

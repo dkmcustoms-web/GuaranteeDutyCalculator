@@ -87,7 +87,7 @@ def init_state():
             st.session_state[k] = v
 
 def new_line():
-    return {"comm_code": "", "invoice_value": 0.0}
+    return {"commodity_idx": 0, "invoice_value": 0.0}
 
 # ── PDF generation ────────────────────────────────────────────────────────────
 def build_pdf(lines_data, ref, user, currency, rate, rate_source,
@@ -314,9 +314,16 @@ def main():
 
     st.divider()
 
+    # ── Build commodity options list (code first so typing digits finds it) ───
+    # Format: "08051010 – Sinaasappelen – zoet vers"
+    commodity_options = [None] + [
+        f"{row['commodity_code']} – {row['description']}"
+        for _, row in commodities_df.iterrows()
+    ]
+
     # ── Column headers ────────────────────────────────────────────────────────
-    col_widths = [1.4, 2.8, 1.5, 1.3, 1.3, 1.3, 1.3, 0.4]
-    headers = ["GN-code", "Omschrijving", f"Factuurwaarde ({chosen_currency})",
+    col_widths = [4.5, 1.5, 1.3, 1.3, 1.3, 1.3, 0.4]
+    headers = [f"GN-code + Omschrijving", f"Factuurwaarde ({chosen_currency})",
                "Waarde EUR", "Duty %", "Duty", "BTW (21%)", ""]
     h_cols = st.columns(col_widths)
     for hc, ht in zip(h_cols, headers):
@@ -328,46 +335,30 @@ def main():
     for i, line in enumerate(st.session_state.lines):
         c = st.columns(col_widths)
 
-        # GN-code text input (type to search)
+        # Single searchable selectbox — type digits to jump to matching code
         with c[0]:
-            typed_code = st.text_input(
-                f"code_{i}", value=line.get("comm_code", ""),
-                placeholder="typ code...",
-                key=f"code_{i}",
+            saved_idx = line.get("commodity_idx")  # None = placeholder
+            sel = st.selectbox(
+                f"commodity_{i}",
+                options=commodity_options,
+                index=saved_idx if saved_idx is not None else 0,
+                format_func=lambda x: "— selecteer goederencode —" if x is None else x,
+                key=f"comm_{i}",
                 label_visibility="collapsed",
             )
-            line["comm_code"] = typed_code.strip()
-
-        # Description: find matching row(s)
-        with c[1]:
-            matched = commodities_df[
-                commodities_df["commodity_code"].str.startswith(line["comm_code"])
-            ] if line["comm_code"] else pd.DataFrame()
-
-            if len(matched) == 0:
-                st.markdown("<div class='calc-cell desc-cell'>–</div>", unsafe_allow_html=True)
+            if sel is None:
                 duty_pct = 0.0
-                commodity_label = line["comm_code"]
-            elif len(matched) == 1:
-                desc = matched.iloc[0]["description"]
-                duty_pct = matched.iloc[0]["duty_pct"]
-                commodity_label = f"{matched.iloc[0]['commodity_code']} – {desc}"
-                st.markdown(f"<div class='calc-cell desc-cell' title='{desc}'>{desc}</div>",
-                            unsafe_allow_html=True)
+                commodity_label = ""
+                line["commodity_idx"] = 0
             else:
-                # Multiple matches → selectbox
-                options = [f"{r['commodity_code']} – {r['description']}"
-                           for _, r in matched.iterrows()]
-                sel = st.selectbox(
-                    f"desc_{i}", options, key=f"desc_{i}",
-                    label_visibility="collapsed")
-                comm_code_sel = sel.split(" – ")[0]
-                row_sel = commodities_df[commodities_df["commodity_code"] == comm_code_sel].iloc[0]
-                duty_pct = row_sel["duty_pct"]
+                line["commodity_idx"] = commodity_options.index(sel)
+                comm_code = sel.split(" – ")[0]
+                row_match = commodities_df[commodities_df["commodity_code"] == comm_code]
+                duty_pct = row_match.iloc[0]["duty_pct"] if not row_match.empty else 0.0
                 commodity_label = sel
 
         # Invoice value
-        with c[2]:
+        with c[1]:
             inv_val = st.number_input(
                 f"inv_{i}", min_value=0.0, value=float(line.get("invoice_value", 0.0)),
                 step=100.0, format="%.2f",
@@ -382,15 +373,15 @@ def main():
         vat_calc = (value_eur + duty_calc) * 0.21
         total_taxes = duty_calc + vat_calc
 
-        with c[3]:
+        with c[2]:
             st.markdown(f"<div class='calc-cell'>€ {value_eur:,.2f}</div>", unsafe_allow_html=True)
-        with c[4]:
+        with c[3]:
             st.markdown(f"<div class='calc-cell'>{duty_pct:.2f}%</div>", unsafe_allow_html=True)
-        with c[5]:
+        with c[4]:
             st.markdown(f"<div class='calc-cell'>€ {duty_calc:,.2f}</div>", unsafe_allow_html=True)
-        with c[6]:
+        with c[5]:
             st.markdown(f"<div class='calc-cell'>€ {vat_calc:,.2f}</div>", unsafe_allow_html=True)
-        with c[7]:
+        with c[6]:
             if st.button("🗑", key=f"del_{i}", help="Verwijder lijn",
                          disabled=len(st.session_state.lines) == 1):
                 st.session_state.lines.pop(i)

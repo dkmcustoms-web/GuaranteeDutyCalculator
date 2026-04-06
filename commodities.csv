@@ -1,0 +1,117 @@
+commodity_code,description,duty_pct
+01012100,Paarden – rashouderdieren,0.0
+01012910,Paarden – slacht,0.0
+01022110,Runderen – rashouderdieren levend,0.0
+01051110,Pluimvee – hanen en kippen < 185g,0.0
+02011000,Rundvlees – karkassen en halve karkassen vers,12.8
+02013000,Rundvlees – zonder been vers of gekoeld,12.8
+02023000,Rundvlees – zonder been bevroren,12.8
+02031110,Varkensvlees – karkassen en halve karkassen vers,0.0
+02061000,Eetbare slachtafvallen – rund vers,0.0
+02071110,Vlees en eetbare slachtafvallen pluimvee – vers,0.0
+03019110,Zalm – levend,2.0
+03021310,Atlantische zalm – vers of gekoeld,2.0
+03031300,Atlantische zalm – bevroren,2.0
+04011010,Melk en room – niet ingedikt vet ≤ 1%,0.0
+04021011,Melkpoeder – vet ≤ 1.5%,0.0
+04051011,Boter – vetgehalte ≥ 80%,0.0
+07011000,Pootaardappelen,0.0
+07019000,Aardappelen – overige,0.0
+07020000,Tomaten – vers of gekoeld,8.8
+07031000,Uien en sjalotten,9.6
+07070000,Komkommers en augurken,12.8
+07092000,Asperges,10.4
+08021100,Amandelen – in de dop,3.2
+08021200,Amandelen – gedopt,5.6
+08051010,Sinaasappelen – zoet vers,16.0
+08052010,Clementines – vers,16.0
+08061010,Tafeldruiven – vers,14.4
+08081000,Appelen – vers,11.2
+08082050,Peren – vers,12.0
+08101000,Aardbeien – vers,0.0
+09011100,Koffie – niet gebrand ongecafeïneerd,0.0
+09021000,Groene thee,0.0
+09024000,Zwarte thee,0.0
+10011100,Durumtarwe – voor zaaidoeleinden,0.0
+10059000,Maïs – overige,0.0
+11010000,Tarwebloem,0.0
+12010010,Sojabonen – voor zaaidoeleinden,0.0
+15071000,Sojaolie – ruw,3.2
+15121100,Zonnebloemolie – ruw,0.0
+16010000,Worst en soortgelijke producten,16.6
+17011410,Rietsuiker – ruwe suiker,33.9
+17019910,Witte suiker,41.9
+18010000,Cacaobonen – ruw,0.0
+18040000,Cacaoboter – vet en olie,7.7
+19011000,Bereidingen voor zuigelingenvoeding,14.0
+19053100,Zoete koekjes,9.0
+20019010,Olijven – bereid of verduurzaamd azijn,16.0
+20079110,Citrusvruchtenjam,16.0
+21031000,Sojasaus,7.7
+21069098,Levensmiddelenpreparaten – overige,6.4
+22021000,Water – mineraalwater of bronwater,9.6
+22030001,Bier van mout,0.0
+22042196,Wijn – bubbels,0.0
+23040000,Perskoeken soja – diervoeder,0.0
+24011010,Tabak – Virginia type vuurgedroogd,18.4
+25010010,Zeezout,0.0
+27090010,Aardolie – ruw,0.0
+27101225,Kerosine – voor luchtvaart,0.0
+27101943,Stookolie – zware olie,3.5
+28011000,Chloor,0.0
+28080000,Salpeterzuur,0.0
+29051100,Methanol,0.0
+29152100,Azijnzuur,4.5
+30042090,Geneesmiddelen – antibiotica,0.0
+32041200,Reactieve kleurstoffen,6.5
+32100000,Verven en vernissen voor gebruik in het kleinbedrijf,6.5
+33011200,Citrusessence,5.5
+33019000,Essentiële oliën – overige,0.0
+34021100,Anionische tensioactieve stoffen,6.5
+38089290,Fungiciden,0.0
+39011010,Polyethyleen – soortelijk gewicht < 0.94,6.5
+39021000,Polypropeen,6.5
+39231000,Dozen – kunststof,6.5
+40011000,Natuurlijk rubber – latex,0.0
+40112090,Nieuwe banden voor personenauto's,4.5
+41012010,Runderhuiden – vers,0.0
+42021210,Reiskoffers en weekendtassen,3.7
+43011000,Nertsvellen – met de kop,0.0
+44032000,Naaldhout – ruw niet behandeld,0.0
+44071091,Naaldhout – gezaagd of vlakgezaagd,2.0
+47010000,Houtpulp – mechanisch,0.0
+48010000,Krantenpapier,0.0
+48025710,Schrijf- en drukpapier,0.0
+50020000,Grège van rupsen,0.0
+52010000,Katoen – niet gekamd of gekamd,0.0
+52094200,Denim – weefsel katoen,12.0
+54023300,Textuurgaren – van polyester,4.0
+60019100,Poolweefsel van katoen,12.0
+61051000,Hemden van katoen voor mannen,12.0
+61091000,T-shirts van katoen,12.0
+62046200,Broeken van katoen voor vrouwen,12.0
+64029900,Schoeisel – rubberzool en rubberbovenstuk,17.0
+70051010,Vlakglas – floatglas,4.0
+72041000,Afval en schroot van gietijzer,0.0
+72082700,Plat gewalst staal – breedte ≥ 600mm,0.0
+73042310,Buizen van roestvrij staal,0.0
+76011000,Aluminium – onbewerkt,0.0
+84071000,Zuigermotoren voor luchtvaartuigen,0.0
+84151010,Airconditioners – split systeem,2.7
+84158200,Airconditioners – overige,2.7
+84716041,Verwerkingseenheden PC's,0.0
+85171200,Mobiele telefoons,0.0
+85258011,Camera's voor digitale registratie,4.9
+85369010,Aansluitingsdozen,2.7
+86011000,Locomotieven – elektrisch,0.0
+87032110,Personenauto's – hybride elektrisch < 1000cc,6.5
+87032219,Personenauto's – benzinemotor 1000-1500cc,6.5
+87060011,Onderstellen motorvoertuigen,6.5
+88024000,Vliegtuigen – startgewicht > 15 ton,0.0
+89011010,Cruiseschepen,0.0
+90181100,Bloeddrukmeter,0.0
+90211000,Orthopedisch apparaat,0.0
+94011000,Vliegtuigstoelen,0.0
+94012000,Automobielstoelen,3.7
+94036000,Houten meubilair,2.7
+95030000,Rijwielen driewielers scooters,4.7

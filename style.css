@@ -1,0 +1,144 @@
+/* ── Global ──────────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.app-header {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1a2e4a;
+    padding: 0.5rem 0 0.25rem 0;
+    border-bottom: 3px solid #003580;
+    margin-bottom: 1.25rem;
+    letter-spacing: -0.5px;
+}
+.app-header .flag {
+    margin-right: 0.4rem;
+}
+
+/* ── Column headers ──────────────────────────────────────────────────────── */
+.col-header {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7a8d;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 0.4rem;
+}
+
+/* ── Calculated cells ────────────────────────────────────────────────────── */
+.calc-cell {
+    background: #f0f4fa;
+    border-radius: 6px;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #1e3a5f;
+    text-align: right;
+    margin-top: 0.35rem;
+    border: 1px solid #dce6f0;
+    min-height: 2.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+/* ── Rate badge ──────────────────────────────────────────────────────────── */
+.rate-badge {
+    background: #e8f5e9;
+    border: 1px solid #a5d6a7;
+    border-radius: 8px;
+    padding: 0.5rem 0.9rem;
+    font-size: 0.78rem;
+    color: #2e7d32;
+    margin-top: 1.6rem;
+    line-height: 1.4;
+}
+.rate-badge.warn {
+    background: #fff8e1;
+    border-color: #ffcc80;
+    color: #e65100;
+}
+
+/* ── Metrics ─────────────────────────────────────────────────────────────── */
+[data-testid="metric-container"] {
+    background: #f8fafd;
+    border: 1px solid #dce6f0;
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+}
+[data-testid="metric-container"] [data-testid="stMetricLabel"] {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #6b7a8d;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+[data-testid="metric-container"] [data-testid="stMetricValue"] {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #003580;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.stButton > button {
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.15s ease;
+}
+.stButton > button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,53,128,0.15);
+}
+
+/* ── Download buttons ────────────────────────────────────────────────────── */
+.stDownloadButton > button {
+    background: #003580;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.6rem 1.2rem;
+}
+.stDownloadButton > button:hover {
+    background: #002060;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+.footer {
+    margin-top: 2rem;
+    font-size: 0.72rem;
+    color: #9aa5b4;
+    text-align: center;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* ── Inputs ──────────────────────────────────────────────────────────────── */
+.stNumberInput input, .stTextInput input {
+    border-radius: 6px !important;
+    border: 1px solid #dce6f0 !important;
+    font-size: 0.88rem !important;
+}
+.stSelectbox > div > div {
+    border-radius: 6px !important;
+    border: 1px solid #dce6f0 !important;
+    font-size: 0.88rem !important;
+}
+
+/* ── Delete button ───────────────────────────────────────────────────────── */
+button[title="Verwijder lijn"] {
+    background: transparent !important;
+    color: #dc3545 !important;
+    border: 1px solid #dc3545 !important;
+    padding: 0.3rem 0.5rem !important;
+    font-size: 0.8rem !important;
+    margin-top: 0.35rem;
+}

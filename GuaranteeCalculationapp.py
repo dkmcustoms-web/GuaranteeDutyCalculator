@@ -358,17 +358,23 @@ def main():
             index=cur_idx,
             format_func=lambda x: "— kies munteenheid —" if x is None else x,
             key="currency_select")
+        # Reset manual rate when currency changes
+        if chosen_currency != st.session_state.currency:
+            st.session_state.manual_rate = None
+            if 'global_rate' in st.session_state:
+                del st.session_state['global_rate']
         st.session_state.currency = chosen_currency
     with col_rate:
         live_rate = 1.0 if chosen_currency == "EUR" else (
             exchange_rates.get(chosen_currency, 1.0) if chosen_currency else 1.0)
-        default_rate = st.session_state.manual_rate if st.session_state.manual_rate is not None else live_rate
+        # Always use live rate — only keep manual_rate if currency hasn't changed
+        default_rate = live_rate if st.session_state.manual_rate is None else st.session_state.manual_rate
         exch_rate = st.number_input(
             "Koers → EUR", min_value=0.00001, value=float(default_rate),
             step=0.0001, format="%.4f", key="global_rate",
             help="Automatisch via InforEuro/ECB. Pas manueel aan indien gewenst.",
             disabled=(chosen_currency is None))
-        st.session_state.manual_rate = exch_rate
+        st.session_state.manual_rate = exch_rate if exch_rate != live_rate else None
     with col_badge:
         if exchange_rates:
             st.markdown(
